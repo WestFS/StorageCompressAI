@@ -1,0 +1,78 @@
+# Build artifacts and dependencies
+target/
+debug/
+release/
+**/*.rs.bk
+Cargo.lock.orig
+*.pdb
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Development and testing
+tests/
+benches/
+examples/
+fixtures/
+**/*_test.rs
+**/*_tests.rs
+**/*_bench.rs
+
+# Documentation
+docs/
+*.md
+!README.md
+*.txt
+*.pdf
+
+# IDE and editor files
+.vscode/
+.idea/
+.eclipse/
+*.sublime-*
+*.swp
+*.swo
+*~
+.DS_Store
+.roomodes
+.windsurfrules
+.editorconfig
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+.gitmodules
+.github/
+
+# Configuration and environment
+.env*
+!.env.example
+config.local.*
+*.local.*
+*.log
+.cargo/config.toml
+
+# Temporary and cache files
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+**/*.bak
+**/*.backup
+**/*.old
+
+# Project specific
+image-samples/
+test-images/
+compressed/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.svg
+!assets/*.{jpg,jpeg,png,gif,webp,svg} 

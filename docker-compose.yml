@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  compressor-engine:
+    build:
+      context: ./image-compressor-rust-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - RUST_LOG=info
+    networks:
+      - storagecompress_network
+
+  api-gateway:
+    build:
+      context: ./image-compressor-fastify-api
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - RUST_SERVICE_URL=http://compressor-engine:8000
+    env_file:
+      - ./image-compressor-fastify-api/.env
+    depends_on:
+      - compressor-engine
+    networks:
+      - storagecompress_network
+
+networks:
+  storagecompress_network:
+    driver: bridge 

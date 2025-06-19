@@ -1,0 +1,106 @@
+# Node.js dependencies and artifacts
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+.pnp.*
+*.tgz
+package-lock.json.orig
+yarn.lock.orig
+.yarnrc
+.npmrc
+.node_repl_history
+
+# Build and output
+dist/
+build/
+out/
+*.min.js
+*.min.css
+*.map
+coverage/
+.nyc_output/
+.next/
+.nuxt/
+.output/
+
+# Development and testing
+test/
+tests/
+__tests__/
+__mocks__/
+*.test.js
+*.spec.js
+jest.config.*
+.jest/
+cypress/
+.cypress/
+playwright/
+.playwright/
+
+# Documentation
+docs/
+*.md
+!README.md
+*.txt
+*.pdf
+api-docs/
+jsdoc/
+
+# IDE and editor files
+.vscode/
+.idea/
+.eclipse/
+*.sublime-*
+*.swp
+*.swo
+*~
+.DS_Store
+.roomodes
+.windsurfrules
+.editorconfig
+jsconfig.json
+.eslintcache
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+.gitmodules
+.github/
+
+# Configuration and environment
+.env*
+!.env.example
+*.config.js
+*.config.ts
+*.local.*
+*.development.*
+*.production.*
+config.local.*
+
+# Temporary and cache files
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+**/*.bak
+**/*.backup
+**/*.old
+
+# Project specific
+uploads/
+compressed/
+image-cache/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.svg
+!assets/*.{jpg,jpeg,png,gif,webp,svg}
+.supabase/
+supabase/ 
