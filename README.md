@@ -33,17 +33,17 @@ O StorageCompressAI resolve o problema de compressão e armazenamento de imagens
 
 ```mermaid
 graph TD
-    Client["Cliente (Web/Mobile/CLI)"]
-    API["API Gateway (Fastify/Node.js)"]
-    Rust["Compressor Engine (Rust/Axum)"]
-    Supabase["Supabase Storage (Bucket)"]
+    Client[Cliente - Web/Mobile/CLI]
+    API[API Gateway - Fastify/Node.js]
+    Rust[Compressor Engine - Rust/Axum]
+    Supabase[Supabase Storage - Bucket]
 
     Client -->|POST /api/v1/compress| API
-    API -->|HTTP (image bytes)| Rust
+    API -->|HTTP &#40;image, bytes&#41;| Rust
     Rust -->|Compressed image| API
     API -->|Upload| Supabase
     Supabase -->|Public URL| API
-    API -->|JSON (URL, stats)| Client
+    API -->|JSON &#40; URL, stats &#41;| Client
 ```
 
 - **Comunicação entre serviços**: HTTP puro, sem dependência de filas ou mensageria.
