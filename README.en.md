@@ -34,17 +34,17 @@ StorageCompressAI solves the problem of scalable image compression and storage b
 
 ```mermaid
 graph TD
-    Client["Client (Web/Mobile/CLI)"]
-    API["API Gateway (Fastify/Node.js)"]
-    Rust["Compressor Engine (Rust/Axum)"]
-    Supabase["Supabase Storage (Bucket)"]
+    Client[Cliente - Web/Mobile/CLI]
+    API[API Gateway - Fastify/Node.js]
+    Rust[Compressor Engine - Rust/Axum]
+    Supabase[Supabase Storage - Bucket]
 
     Client -->|POST /api/v1/compress| API
-    API -->|HTTP (image bytes)| Rust
+    API -->|HTTP &#40;image, bytes&#41;| Rust
     Rust -->|Compressed image| API
     API -->|Upload| Supabase
     Supabase -->|Public URL| API
-    API -->|JSON (URL, stats)| Client
+    API -->|JSON &#40; URL, stats &#41;| Client
 ```
 
 - **Service communication**: Pure HTTP, no dependency on queues or messaging.
