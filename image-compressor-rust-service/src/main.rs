@@ -1,28 +1,19 @@
 use axum::{
     body::Bytes,
-    extract::State,
     http::{header, HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
+    extract::DefaultBodyLimit,
 };
 use image_compressor_rust_service::compress_image_bytes;
-use log::{error, info, warn};
 use serde_json::json;
 use std::net::SocketAddr;
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
-};
 use std::time::Instant;
 use tower_http::trace::TraceLayer;
-
-// Define a shared state for our application
-#[derive(Clone)]
-struct AppState {
-    request_counter: Arc<AtomicUsize>,
-    processed_bytes: Arc<AtomicUsize>,
-}
+use tracing::{error, info, warn};
+use metrics_exporter_prometheus::PrometheusHandle;
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
@@ -35,37 +26,33 @@ async fn main() {
 
     info!("Initializing server...");
 
-    let state = AppState {
-        request_counter: Arc::new(AtomicUsize::new(0)),
-        processed_bytes: Arc::new(AtomicUsize::new(0)),
-    };
+    let builder = metrics_exporter_prometheus::PrometheusBuilder::new();
+    let handle = builder.install_recorder().unwrap();
+    let handle = Arc::new(handle);
 
     // Build our application router
     let app = Router::new()
         .route("/compress", post(compress_handler))
         .route("/health", get(health_handler))
-        .route("/metrics", get(metrics_handler))
-        .with_state(state)
-        .layer(TraceLayer::new_for_http());
+        .route("/metrics", get({
+            let handle = handle.clone();
+            move || metrics_handler(handle.clone())
+        }))
+        .layer(TraceLayer::new_for_http())
+        .layer(DefaultBodyLimit::max(10 * 1024 * 1024)); // 10 MB
 
     // Run the server
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     info!("Server listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 /// Handles image compression requests.
 ///
 /// It expects the image data in the request body and an optional
 /// `X-Compression-Quality` header to specify the quality (1-100).
-async fn compress_handler(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    body: Bytes,
-) -> Response {
+async fn compress_handler(headers: HeaderMap, body: Bytes) -> Response {
     let start_time = Instant::now();
     info!(
         "Received compression request. Body size: {} bytes",
@@ -97,12 +84,6 @@ async fn compress_handler(
                 compressed_data.len()
             );
 
-            // Update metrics
-            state.request_counter.fetch_add(1, Ordering::SeqCst);
-            state
-                .processed_bytes
-                .fetch_add(body.len(), Ordering::SeqCst);
-
             (
                 StatusCode::OK,
                 [(header::CONTENT_TYPE, "image/jpeg")],
@@ -127,14 +108,7 @@ async fn health_handler() -> impl IntoResponse {
     (StatusCode::OK, Json(json!({ "status": "ok" })))
 }
 
-/// Provides simple metrics for the service.
-async fn metrics_handler(State(state): State<AppState>) -> impl IntoResponse {
-    info!("Metrics requested.");
-    (
-        StatusCode::OK,
-        Json(json!({
-            "requests_processed": state.request_counter.load(Ordering::SeqCst),
-            "bytes_processed": state.processed_bytes.load(Ordering::SeqCst),
-        })),
-    )
+async fn metrics_handler(handle: Arc<PrometheusHandle>) -> impl IntoResponse {
+    let body = handle.render();
+    (StatusCode::OK, [(header::CONTENT_TYPE, "text/plain")], body)
 }

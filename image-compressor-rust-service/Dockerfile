@@ -1,23 +1,28 @@
 # Stage 1: Build the application
-FROM rust:1.74 as builder
+FROM rust:latest as builder
+
+# Install necessary build tools for C/C++ dependencies like libaom
+RUN apt-get update && apt-get install -y build-essential cmake yasm nasm
 
 WORKDIR /app
 
-# Copy dependencies manifest and fetch them to cache the layer
-COPY Cargo.toml Cargo.lock ./
+# Copy only the manifest to cache dependencies
+COPY Cargo.toml ./
+
+# Build a dummy project to generate Cargo.lock and fetch/build dependencies
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
     cargo build --release && \
-    rm -rf src
+    rm -rf src target/release/deps/image_compressor_rust_service*
 
-# Copy the rest of the application source code
-COPY . .
+# Copy the actual source code
+COPY src ./src
 
-# Build the application
+# Build the real application using cached dependencies
 RUN cargo build --release
 
 # Stage 2: Create the final, minimal image
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 WORKDIR /app
 

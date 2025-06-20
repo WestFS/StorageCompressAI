@@ -9,7 +9,7 @@ This document explains the `image-compressor-rust-service`, a high-performance m
 ## What It Does
 
 - **Input:** Raw image data (bytes) of various formats (PNG, JPEG, WebP, etc.).
-- **Processing:** It decodes the input, converts it to a format suitable for JPEG compression, and then uses the `mozjpeg` engine to perform a high-quality, efficient compression.
+- **Processing:** It decodes the input, converts it to a format suitable for JPEG compression, and then uses the `image` crate to perform high-quality, efficient JPEG compression.
 - **Output:** Raw JPEG image data (bytes).
 - **Why Rust?** Rust was chosen for its performance, memory safety, and excellent concurrency, making it ideal for a CPU-intensive task like image compression.
 
@@ -20,10 +20,8 @@ This document explains the `image-compressor-rust-service`, a high-performance m
 The service follows a clear, multi-step process for every image:
 
 1.  **Decode:** The raw input bytes are decoded using the `image` crate, which automatically detects the original format (e.g., PNG, WebP).
-2.  **Convert to RGB8:** Since JPEG does not support transparency (alpha channels), the image is converted to the RGB8 color space (8 bits each for Red, Green, Blue). This is a critical step for compatibility with the JPEG encoder.
-3.  **Bridge to `zune-image`**: The RGB data is then loaded into a `zune_image::Image` struct. This is the format expected by the `rimage` compression library.
-4.  **Encode with `mozjpeg`:** The `rimage` crate, configured to use its `mozjpeg` backend, compresses the `zune_image` data. `mozjpeg` is a highly optimized JPEG encoder known for producing great quality at smaller file sizes.
-5.  **Return Bytes:** The resulting compressed JPEG bytes are sent back as the HTTP response.
+2.  **Compress to JPEG:** The decoded image is encoded diretamente para JPEG usando a própria `image` crate, com o nível de qualidade especificado.
+3.  **Return Bytes:** The resulting compressed JPEG bytes are sent back as the HTTP response.
 
 ---
 
@@ -31,7 +29,7 @@ The service follows a clear, multi-step process for every image:
 
 -   **`src/main.rs`**: This is the entry point for the web server. It sets up the `axum` web framework, defines the HTTP routes (`/compress`, `/health`, `/metrics`), initializes logging (`tracing`), and manages the server's shared state.
 -   **`src/lib.rs`**: This file contains the core business logic. The `compress_image_bytes` function lives here, encapsulating the entire compression pipeline described above. This separation makes the logic reusable and easy to test independently.
--   **`Cargo.toml`**: This is the manifest file for the Rust project. It defines all dependencies (`axum`, `tokio`, `image`, `rimage`, `tracing`, `metrics`, etc.), metadata, and build profiles.
+-   **`Cargo.toml`**: This is the manifest file for the Rust project. It defines all dependencies (`axum`, `tokio`, `image`, `tracing`, `metrics`, etc.), metadata, and build profiles.
 -   **`Dockerfile`**: A multi-stage Dockerfile that first builds the Rust application in a builder container and then copies the compiled binary into a minimal, clean production container for a small and secure final image.
 
 ---
@@ -54,8 +52,7 @@ These endpoints are designed to be called by other services (like the Fastify AP
 
 -   **`axum`**: A modern, ergonomic web framework for building HTTP services in Rust. It's built on top of `tokio`.
 -   **`tokio`**: The standard asynchronous runtime for Rust, providing the foundation for `axum` to handle thousands of concurrent requests efficiently.
--   **`image`**: A powerful image processing library used for decoding a wide variety of formats.
--   **`rimage` + `zune-image`**: These crates provide the bridge to the `mozjpeg` encoder, which handles the actual JPEG compression.
+-   **`image`**: A powerful image processing library used for decoding a wide variety of formats and for JPEG encoding/compression.
 -   **`tracing`**: A structured, asynchronous-friendly logging framework used throughout the application to provide detailed operational insights.
 -   **`metrics`**: A lightweight library for collecting application metrics, which are then exposed for monitoring systems like Prometheus.
 -   **`Result<T, E>` & `anyhow`**: The project uses Rust's standard `Result` type for robust error handling, enhanced by the `anyhow` crate for adding context to errors, making debugging easier.
@@ -82,7 +79,6 @@ This architecture separates concerns, allowing each service to be optimized and 
 - **Result<T, E>:** Rust's way of handling errors. `Ok(value)` for success, `Err(error)` for failure.
 - **Context:** Adds extra info to errors for easier debugging.
 - **Vec<u8>:** A growable array of bytes (used for image data).
-- **Trait:** Like an interface in other languages. `EncoderTrait` is used for compression.
 - **Dependency:** External code you use (see `Cargo.toml`).
 - **Docker:** Lets you run the service in a container, isolated from your system.
 

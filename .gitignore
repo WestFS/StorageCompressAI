@@ -33,8 +33,10 @@ build/
 .roo/
 
 # Environment variables
-.env
+.env*
 .env.*
+!.env.example
+
 
 # Editor directories and files
 .idea/
@@ -57,7 +59,9 @@ Thumbs.db
 .roomodes
 .windsurfrules
 
-# Certifique-se de NÃO ignorar arquivos essenciais do projeto Rust
+# Important files for the Rust project
 !src/
 !Cargo.toml
 !README.md
+
+EXPLAINER_IMAGE_COMPRESSOR_original.md

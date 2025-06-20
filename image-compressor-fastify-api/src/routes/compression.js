@@ -10,13 +10,6 @@ async function routes(fastify, opts) {
 
   // Schema for the compression endpoint
   const schema = {
-    body: {
-      type: 'object',
-      properties: {
-        quality: { type: 'number', minimum: 1, maximum: 100 },
-        format: { type: 'string', enum: ['jpeg', 'png', 'webp'] }
-      }
-    },
     response: {
       200: {
         type: 'object',
@@ -49,13 +42,15 @@ async function routes(fastify, opts) {
       ));
     }
 
-    const originalSize = data.file.length;
+    // Convert the file stream to a buffer before processing
+    const imageBuffer = await data.toBuffer();
+    const originalSize = imageBuffer.length;
     const filename = generateUniqueFilename(data.filename);
 
     try {
-      // Compress image
+      // Compress image using the buffer
       const compressedBuffer = await compressionService.compressImage(
-        data.file,
+        imageBuffer,
         {
           quality: request.body?.quality,
           format: request.body?.format
@@ -69,11 +64,8 @@ async function routes(fastify, opts) {
         data.mimetype
       );
 
-      return {
-        ...uploadResult,
-        originalSize,
-        compressionRatio: (originalSize / uploadResult.size).toFixed(2)
-      };
+      reply.header('Content-Type', 'image/jpeg');
+      return reply.send(compressedBuffer);
     } catch (error) {
       request.log.error(error);
       

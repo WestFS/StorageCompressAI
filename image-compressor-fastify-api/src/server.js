@@ -16,7 +16,7 @@ const fastify = require('fastify')({
 });
 
 const config = require('./config');
-const { apiKeyAuth, requestLogger } = require('./middleware');
+const { apiKeyAuth } = require('./middleware');
 const CompressionService = require('./services/compression');
 const SupabaseService = require('./services/supabase');
 
@@ -35,8 +35,8 @@ async function registerPlugins() {
     }
   });
   await fastify.register(require('@fastify/rate-limit'), {
-    max: config.rateLimit.max,
-    timeWindow: config.rateLimit.timeWindow
+    max: config.security.rateLimit.max,
+    timeWindow: config.security.rateLimit.timeWindow
   });
   await fastify.register(require('@fastify/helmet'));
 }
@@ -55,7 +55,6 @@ function initializeServices() {
 // Register routes
 async function registerRoutes() {
   // Add global middlewares
-  fastify.addHook('onRequest', requestLogger(config));
   if (config.security.apiKey) {
     fastify.addHook('onRequest', apiKeyAuth(config));
   }

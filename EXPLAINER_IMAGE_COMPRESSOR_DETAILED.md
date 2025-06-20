@@ -64,10 +64,8 @@ The heart of the service is the `compress_image_bytes` function. It's a pure fun
 
 **Compression Pipeline:**
 1.  **Decode:** The `image::load_from_memory` function is used to decode the input byte slice. It's powerful because it infers the image format (PNG, WebP, etc.) from the data itself.
-2.  **Convert to RGB8:** JPEG doesn't support transparency. The `dynamic_img.into_rgb8()` method converts the image into a pixel format of 8 bits per channel for Red, Green, and Blue, discarding any alpha channel.
-3.  **Bridge to `zune-image`:** The `rimage` crate's `mozjpeg` encoder expects data in the `zune_image::Image` format. We construct this struct from the raw RGB8 pixel data, width, height, and color space.
-4.  **Encode with `mozjpeg`:** An instance of `MozJpegEncoder` is created with the desired quality. Its `.encode()` method performs the CPU-intensive compression work.
-5.  **Return `Result<Vec<u8>>`:** The function returns the compressed `Vec<u8>` on success or a detailed `anyhow::Error` on failure, ensuring robust error handling.
+2.  **Compress to JPEG:** The decoded image is encoded directly to JPEG using the `image` crate, with the specified quality level.
+3.  **Return `Result<Vec<u8>>`:** The function returns the compressed `Vec<u8>` on success or a detailed `anyhow::Error` on failure, ensuring robust error handling.
 
 ### The Axum Web Server (`main.rs`)
 
@@ -83,8 +81,7 @@ The heart of the service is the `compress_image_bytes` function. It's a pure fun
 ### Key Dependencies (Rust)
 -   `axum`, `tokio`: For the web server and async runtime.
 -   `tower-http`: Provides essential HTTP middleware (tracing, cors, timeouts).
--   `image`: For robust, multi-format image decoding.
--   `rimage`, `zune-image`, `zune-core`: The toolchain for high-performance `mozjpeg` compression.
+-   `image`: For robust, multi-format image decoding and JPEG encoding/compression.
 -   `tracing`, `tracing-subscriber`: For structured, asynchronous logging.
 -   `metrics`, `metrics-exporter-prometheus`: For collecting and exposing application metrics.
 -   `anyhow`: For flexible and developer-friendly error handling.
